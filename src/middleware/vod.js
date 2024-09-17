@@ -518,7 +518,7 @@ module.exports.splitVideoVodChapters = async (vodPath, duration, vodId, vodChapt
 
       while (config.youtube.restrictedGames.includes(vodChapters[current_chapter].name)) {
         start = vodChapters[current_chapter].end
-        console.info(`Trying to split ${vodPath} | part start skipping [${current_chapter}] ${vodChapters[current_chapter].name}`);
+        console.info(`!! SKIP ${vodPath}. [${current_chapter}] ${vodChapters[current_chapter].name}. [${vodChapters[current_chapter].start} to ${vodChapters[current_chapter].end}] / ${duration}`);
         current_chapter += 1;
         if (current_chapter === vodChapters.length) break;
       }
@@ -535,7 +535,7 @@ module.exports.splitVideoVodChapters = async (vodPath, duration, vodId, vodChapt
         console.info(`Trying to split ${vodPath} | testing [${current_chapter}] ${vodChapters[current_chapter].name}`);
         if (config.youtube.restrictedGames.includes(vodChapters[current_chapter].name)) {
           end = vodChapters[current_chapter].start
-          console.info(`Trying to split ${vodPath} | part ending before [${current_chapter}] ${vodChapters[current_chapter].name}`);
+          console.info(`!! SKIP ${vodPath}. [${current_chapter}] ${vodChapters[current_chapter].name}. [${vodChapters[current_chapter].start} to ${vodChapters[current_chapter].end}] / ${duration}`);
           break;
         }
         current_chapter += 1;
@@ -563,7 +563,7 @@ module.exports.splitVideoVodChapters = async (vodPath, duration, vodId, vodChapt
           }
         })
         .on("start", (cmd) => {
-          console.info(`Splitting ${vodPath}. ${cut + start} / ${duration}`);
+          console.info(`Splitting ${vodPath}. [${start} to ${end}] / ${duration}`);
         })
         .on("error", function (err) {
           ffmpeg_process.kill("SIGKILL");
