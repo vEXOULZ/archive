@@ -8,6 +8,7 @@ const dmca = require("./dmca");
 
 module.exports = function (app) {
   app.post("/admin/download", limiter(app), admin.verify(app), admin.download(app));
+  app.post("/admin/generate/vod", limiter(app), admin.verify(app), admin.generateVod(app));
   app.post("/admin/hls/download", limiter(app), admin.verify(app), admin.hlsDownload(app));
   app.post("/admin/manual/vod", limiter(app), admin.verify(app), admin.vodUpload(app));
   app.post("/admin/manual/game", limiter(app), admin.verify(app), admin.gameUpload(app));

@@ -28,7 +28,7 @@ module.exports.verify = function (app) {
   };
 };
 
-module.exports.download = function (app) {
+module.exports.generateVod = function (app) {
   return async function (req, res, next) {
     let { vodId, type, platform, path, m3u8 } = req.body;
     if (!vodId) return res.status(400).json({ error: true, msg: "No VodId" });
@@ -43,15 +43,7 @@ module.exports.download = function (app) {
       .catch(() => false);
 
     if (exists) {
-      res.status(200).json({ error: false, msg: "Starting download.." });
-      emotes.save(vodId, app);
-      if (m3u8) {
-        await kick.downloadHLS(vodId, app, m3u8);
-        return;
-      }
-
-      vod.upload(vodId, app, path, type);
-      return;
+      return res.status(400).json({ error: true, msg: "Vod data already exists" });
     }
 
     if (platform === "twitch") {
@@ -86,11 +78,9 @@ module.exports.download = function (app) {
           console.error(e);
         });
 
-      res.status(200).json({ error: false, msg: "Starting download.." });
+      res.status(200).json({ error: false, msg: "Vod Data Created.." });
       emotes.save(vodId, app);
 
-      const vodPath = await vod.upload(vodId, app, path, type, "twitch");
-      if (vodPath) fs.unlinkSync(vodPath);
     } else if (platform === "kick") {
       const vodData = await kick.getVod(app, config.kick.username, vodId);
       if (!vodData)
@@ -122,16 +112,38 @@ module.exports.download = function (app) {
         .catch((e) => {
           console.error(e);
         });
+      res.status(200).json({ error: false, msg: "Vod Data Created.." });
+
+    }
+  };
+};
+
+module.exports.download = function (app) {
+  return async function (req, res, next) {
+    let { vodId, type, platform, path, m3u8 } = req.body;
+    if (!vodId) return res.status(400).json({ error: true, msg: "No VodId" });
+    if (!type) return res.status(400).json({ error: true, msg: "No type" });
+    if (!platform)
+      return res.status(400).json({ error: true, msg: "No platform" });
+
+    const exists = await app
+      .service("vods")
+      .get(vodId)
+      .then(() => true)
+      .catch(() => false);
+
+    if (exists) {
       res.status(200).json({ error: false, msg: "Starting download.." });
       emotes.save(vodId, app);
-
       if (m3u8) {
         await kick.downloadHLS(vodId, app, m3u8);
         return;
       }
-      
-      const vodPath = await vod.upload(vodId, app, path, type, "kick");
+      const vodPath = await vod.upload(vodId, app, path, type);
       if (vodPath) fs.unlinkSync(vodPath);
+      return;
+    } else {
+      return res.status(404).json({ error: false, msg: "No Vod Data" });
     }
   };
 };
