@@ -61,7 +61,7 @@ module.exports.upload = async (
 
   if (config.youtube.perGameUpload && vod.chapters) {
     for (let chapter of vod.chapters) {
-      if (chapter.end < 60 * 5) continue;
+      if (chapter.end < 20) continue;
       if (config.youtube.restrictedGames.includes(chapter.name)) continue;
 
       console.info(
