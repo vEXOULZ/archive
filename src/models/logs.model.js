@@ -24,7 +24,7 @@ module.exports = function (app) {
       allowNull: true
     },
     content_offset_seconds: {
-      type: DataTypes.TEXT,
+      type: DataTypes.INTEGER,
       allowNull: false
     },
     message: {
