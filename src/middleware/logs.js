@@ -38,7 +38,7 @@ module.exports = function (app) {
         responseJson = await offsetSearch(
           app,
           vodId,
-          content_offset_seconds,
+          praseInt(content_offset_seconds),
           vodData
         );
 
@@ -172,6 +172,8 @@ const offsetSearch = async (app, vodId, content_offset_seconds, vodData) => {
       console.error(e);
       return null;
     });
+
+  
 
   if (!data) return null;
 
