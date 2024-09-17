@@ -66,7 +66,7 @@ module.exports.upload = async (
 
       console.info(
         `Trimming ${chapter.name} from ${vod.id} ${dayjs(vod.createdAt).format(
-          "MM/DD/YYYY"
+          "YYYY-MM-DD"
         )}`
       );
       const trimmedPath = await this.trim(
@@ -113,7 +113,7 @@ module.exports.upload = async (
               totalGames + 1
             } - ${dayjs(vod.createdAt)
               .tz(config.timezone)
-              .format("MMMM DD YYYY")
+              .format("YYYY-MM-DD")
               .toUpperCase()} PART ${i + 1}`;
             gameTitle = `${config.channel} plays ${chapter.name} EP ${
               totalGames + 1
@@ -123,7 +123,7 @@ module.exports.upload = async (
               vod.createdAt
             )
               .tz(config.timezone)
-              .format("MMMM DD YYYY")
+              .format("YYYY-MM-DD")
               .toUpperCase()} PART ${i + 1}`;
             gameTitle = `${config.channel} plays ${chapter.name}`;
           }
@@ -173,7 +173,7 @@ module.exports.upload = async (
             totalGames + 1
           } - ${dayjs(vod.createdAt)
             .tz(config.timezone)
-            .format("MMMM DD YYYY")
+            .format("YYYY-MM-DD")
             .toUpperCase()}}`;
           gameTitle = `${config.channel} plays ${chapter.name} EP ${
             totalGames + 1
@@ -183,7 +183,7 @@ module.exports.upload = async (
             vod.createdAt
           )
             .tz(config.timezone)
-            .format("MMMM DD YYYY")
+            .format("YYYY-MM-DD")
             .toUpperCase()}`;
           gameTitle = `${config.channel} plays ${chapter.name}`;
         }
@@ -229,13 +229,13 @@ module.exports.upload = async (
                   vod.platform.charAt(0).toUpperCase() + vod.platform.slice(1)
                 } VOD - ${dayjs(vod.createdAt)
                   .tz(config.timezone)
-                  .format("MMMM DD YYYY")
+                  .format("YYYY-MM-DD")
                   .toUpperCase()} PART ${i + 1}`
               : `${config.channel} ${
                   vod.platform.charAt(0).toUpperCase() + vod.platform.slice(1)
                 }  Live VOD - ${dayjs(vod.createdAt)
                   .tz(config.timezone)
-                  .format("MMMM DD YYYY")
+                  .format("YYYY-MM-DD")
                   .toUpperCase()} PART ${i + 1}`,
           type: type,
           public:
@@ -271,13 +271,13 @@ module.exports.upload = async (
               vod.platform.charAt(0).toUpperCase() + vod.platform.slice(1)
             } VOD - ${dayjs(vod.createdAt)
               .tz(config.timezone)
-              .format("MMMM DD YYYY")
+              .format("YYYY-MM-DD")
               .toUpperCase()}`
           : `${config.channel} ${
               vod.platform.charAt(0).toUpperCase() + vod.platform.slice(1)
             } Live VOD - ${dayjs(vod.createdAt)
               .tz(config.timezone)
-              .format("MMMM DD YYYY")
+              .format("YYYY-MM-DD")
               .toUpperCase()}`,
       public:
         config.youtube.multiTrack && type === "live" && config.youtube.public
@@ -329,13 +329,13 @@ module.exports.manualVodUpload = async (
             vod.platform.charAt(0).toUpperCase() + vod.platform.slice(1)
           } VOD - ${dayjs(vod.createdAt)
             .tz(config.timezone)
-            .format("MMMM DD YYYY")
+            .format("YYYY-MM-DD")
             .toUpperCase()}`
         : `${config.channel} ${
             vod.platform.charAt(0).toUpperCase() + vod.platform.slice(1)
           } Live VOD - ${dayjs(vod.createdAt)
             .tz(config.timezone)
-            .format("MMMM/DD/YYYY")
+            .format("YYYY-MM-DD")
             .toUpperCase()}`,
     public:
       config.youtube.multiTrack && type === "live" && config.youtube.public
@@ -360,7 +360,7 @@ module.exports.manualGameUpload = async (app, game, videoPath) => {
   const { vodId, date, chapter } = game;
   const { name, end, start } = chapter;
   console.info(
-    `Trimming ${name} from ${vodId} ${dayjs(date).format("MM/DD/YYYY")}`
+    `Trimming ${name} from ${vodId} ${dayjs(date).format("YYYY-MM-DD")}`
   );
 
   const trimmedPath = await this.trim(videoPath, vodId, start, end);
@@ -379,7 +379,7 @@ module.exports.manualGameUpload = async (app, game, videoPath) => {
           path: paths[i],
           title: `${config.channel} plays ${name} - ${dayjs(date)
             .tz(config.timezone)
-            .format("MMMM DD YYYY")
+            .format("YYYY-MM-DD")
             .toUpperCase()} PART ${i + 1}`,
           type: "vod",
           public: true,
@@ -403,7 +403,7 @@ module.exports.manualGameUpload = async (app, game, videoPath) => {
         path: trimmedPath,
         title: `${config.channel} plays ${name} - ${dayjs(vod.createdAt)
           .tz(config.timezone)
-          .format("MMMM DD YYYY")
+          .format("YYYY-MM-DD")
           .toUpperCase()}`,
         type: "vod",
         public: true,
@@ -443,7 +443,7 @@ module.exports.liveUploadPart = async (
 
   console.info(
     `Trimming ${vod.id} ${dayjs(vod.createdAt).format(
-      "MM/DD/YYYY"
+      "YYYY-MM-DD"
     )} | Start time: ${start} | Duration: ${end}`
   );
   let trimmedPath = await this.trimHLS(m3u8Path, vodId, start, end);
@@ -458,13 +458,13 @@ module.exports.liveUploadPart = async (
             vod.platform.charAt(0).toUpperCase() + vod.platform.slice(1)
           } VOD - ${dayjs(vod.createdAt)
             .tz(config.timezone)
-            .format("MMMM DD YYYY")
+            .format("YYYY-MM-DD")
             .toUpperCase()} PART ${part}`
         : `${config.channel} ${
             vod.platform.charAt(0).toUpperCase() + vod.platform.slice(1)
           } Live VOD - ${dayjs(vod.createdAt)
             .tz(config.timezone)
-            .format("MMMM DD YYYY")
+            .format("YYYY-MM-DD")
             .toUpperCase()} PART ${part}`,
     public:
       config.youtube.multiTrack && type === "live" && config.youtube.public
