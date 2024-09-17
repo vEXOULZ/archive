@@ -225,46 +225,46 @@ module.exports.upload = async (
       return;
     }
 
-    for (let i = 0; i < paths.length; i++) {
-      const data = {
-        path: paths[i],
-        title:
-          type === "vod"
-            ? `${config.channel} ${
-                vod.platform.charAt(0).toUpperCase() + vod.platform.slice(1)
-              } VOD - ${dayjs(vod.createdAt)
-                .tz(config.timezone)
-                .format("YYYY-MM-DD")
-                .toUpperCase()} PART ${i + 1}`
-            : `${config.channel} ${
-                vod.platform.charAt(0).toUpperCase() + vod.platform.slice(1)
-              }  Live VOD - ${dayjs(vod.createdAt)
-                .tz(config.timezone)
-                .format("YYYY-MM-DD")
-                .toUpperCase()} PART ${i + 1}`,
-        type: type,
-        public:
-          config.youtube.multiTrack &&
-          type === "live" &&
-          config.youtube.public
-            ? true
-            : !config.youtube.multiTrack &&
-              type === "vod" &&
-              config.youtube.public
-            ? true
-            : false,
-        duration: await getDuration(paths[i]),
-        vod: vod,
-        part: i + 1,
-      };
-      await youtube.upload(data, app);
-      fs.unlinkSync(paths[i]);
-    }
-    setTimeout(async () => {
-      await youtube.saveChapters(vodId, app, type);
-      setTimeout(() => youtube.saveParts(vodId, app, type), 30000);
-    }, 30000);
-    if (config.drive.upload) fs.unlinkSync(vodPath);
+    // for (let i = 0; i < paths.length; i++) {
+    //   const data = {
+    //     path: paths[i],
+    //     title:
+    //       type === "vod"
+    //         ? `${config.channel} ${
+    //             vod.platform.charAt(0).toUpperCase() + vod.platform.slice(1)
+    //           } VOD - ${dayjs(vod.createdAt)
+    //             .tz(config.timezone)
+    //             .format("YYYY-MM-DD")
+    //             .toUpperCase()} PART ${i + 1}`
+    //         : `${config.channel} ${
+    //             vod.platform.charAt(0).toUpperCase() + vod.platform.slice(1)
+    //           }  Live VOD - ${dayjs(vod.createdAt)
+    //             .tz(config.timezone)
+    //             .format("YYYY-MM-DD")
+    //             .toUpperCase()} PART ${i + 1}`,
+    //     type: type,
+    //     public:
+    //       config.youtube.multiTrack &&
+    //       type === "live" &&
+    //       config.youtube.public
+    //         ? true
+    //         : !config.youtube.multiTrack &&
+    //           type === "vod" &&
+    //           config.youtube.public
+    //         ? true
+    //         : false,
+    //     duration: await getDuration(paths[i]),
+    //     vod: vod,
+    //     part: i + 1,
+    //   };
+    //   await youtube.upload(data, app);
+    //   fs.unlinkSync(paths[i]);
+    // }
+    // setTimeout(async () => {
+    //   await youtube.saveChapters(vodId, app, type);
+    //   setTimeout(() => youtube.saveParts(vodId, app, type), 30000);
+    // }, 30000);
+    // if (config.drive.upload) fs.unlinkSync(vodPath);
     return vodPath;
 
   }
@@ -511,9 +511,20 @@ module.exports.splitVideoVodChapters = async (vodPath, duration, vodId, vodChapt
 
   while (start < duration) {
     await new Promise((resolve, reject) => {
+      console.info(`Trying to split ${vodPath} | ==========================`);
+  
+      console.info(`Trying to split ${vodPath} | part 1 from ${start}`);
+
       while (config.youtube.restrictedGames.includes(vodChapters[current_chapter].name)) {
         start = vodChapters[current_chapter].end
+        console.info(`Trying to split ${vodPath} | part 1 start skipping [${current_chapter}] ${vodChapters[current_chapter].name}`);
         current_chapter += 1;
+        if (current_chapter === vodChapters.length) break;
+      }
+  
+      if (current_chapter === vodChapters.length) {
+        console.info(`Trying to split ${vodPath} | end`);
+        return;
       }
 
       let end = start + config.youtube.splitDuration
@@ -522,6 +533,7 @@ module.exports.splitVideoVodChapters = async (vodPath, duration, vodId, vodChapt
       while (vodChapters[current_chapter].start < end) {
         if (config.youtube.restrictedGames.includes(vodChapters[current_chapter].name)) {
           end = vodChapters[current_chapter].start
+          console.info(`Trying to split ${vodPath} | part 1 ending before [${current_chapter}] ${vodChapters[current_chapter].name}`);
           break;
         }
         current_chapter += 1;
@@ -529,6 +541,8 @@ module.exports.splitVideoVodChapters = async (vodPath, duration, vodId, vodChapt
       }
 
       let cut = end - start;
+  
+      console.info(`Trying to split ${vodPath} | part 1 from ${start} to ${end}`);
 
       const ffmpeg_process = ffmpeg(vodPath);
       ffmpeg_process
