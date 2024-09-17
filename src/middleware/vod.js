@@ -512,29 +512,26 @@ module.exports.splitVideoVodChapters = async (vodPath, duration, vodId, vodChapt
 
   while (start < duration) {
     await new Promise((resolve, reject) => {
-      console.info(`Trying to split ${vodPath} | ==========================`);
+      console.info(`${vodPath} | ==========================`);
   
-      console.info(`Trying to split ${vodPath} | part from ${start}`);
+      console.info(`${vodPath} | part from ${start}`);
 
       while (config.youtube.restrictedGames.includes(vodChapters[current_chapter].name)) {
         start = vodChapters[current_chapter].start + vodChapters[current_chapter].end
         console.info(`!! SKIP ${vodPath}. [${current_chapter}] ${vodChapters[current_chapter].name}. [${vodChapters[current_chapter].start} to ${vodChapters[current_chapter].start + vodChapters[current_chapter].end}] / ${duration}`);
         current_chapter += 1;
-        if (current_chapter === vodChapters.length) break;
-      }
-  
-      if (current_chapter === vodChapters.length) {
-        return;
+        // no more data to collect
+        if (current_chapter === vodChapters.length) return;
       }
 
       end = start + config.youtube.splitDuration
       if (end > duration) end = duration;
 
       while (vodChapters[current_chapter].start < end) {
-        console.info(`Trying to split ${vodPath} | testing [${current_chapter}] ${vodChapters[current_chapter].name}`);
+        console.info(`${vodPath} | testing [${current_chapter}] ${vodChapters[current_chapter].name}`);
         if (config.youtube.restrictedGames.includes(vodChapters[current_chapter].name)) {
           end = vodChapters[current_chapter].start
-          console.info(`!! SKIP ${vodPath}. [${current_chapter}] ${vodChapters[current_chapter].name}. [${vodChapters[current_chapter].start} to ${vodChapters[current_chapter].start + vodChapters[current_chapter].end}] / ${duration}`);
+          console.info(`!! END BEFORE ${vodPath}. [${current_chapter}] ${vodChapters[current_chapter].name}. [${vodChapters[current_chapter].start} to ${vodChapters[current_chapter].start + vodChapters[current_chapter].end}] / ${duration}`);
           break;
         }
         current_chapter += 1;
@@ -542,8 +539,6 @@ module.exports.splitVideoVodChapters = async (vodPath, duration, vodId, vodChapt
       }
 
       let cut = end - start;
-  
-      console.info(`Trying to split ${vodPath} | part from ${start} to ${end}`);
 
       const ffmpeg_process = ffmpeg(vodPath);
       ffmpeg_process
@@ -581,6 +576,7 @@ module.exports.splitVideoVodChapters = async (vodPath, duration, vodId, vodChapt
         console.error("\nffmpeg error occurred: " + e);
       });
     start = end;
+    console.info(`Trying to split ${vodPath} =~= new part =~=`);
   }
   console.info(`Trying to split ${vodPath} =================== END`);
   return paths;
