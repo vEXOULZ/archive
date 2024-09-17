@@ -225,46 +225,46 @@ module.exports.upload = async (
       return;
     }
 
-    // for (let i = 0; i < paths.length; i++) {
-    //   const data = {
-    //     path: paths[i],
-    //     title:
-    //       type === "vod"
-    //         ? `${config.channel} ${
-    //             vod.platform.charAt(0).toUpperCase() + vod.platform.slice(1)
-    //           } VOD - ${dayjs(vod.createdAt)
-    //             .tz(config.timezone)
-    //             .format("YYYY-MM-DD")
-    //             .toUpperCase()} PART ${i + 1}`
-    //         : `${config.channel} ${
-    //             vod.platform.charAt(0).toUpperCase() + vod.platform.slice(1)
-    //           }  Live VOD - ${dayjs(vod.createdAt)
-    //             .tz(config.timezone)
-    //             .format("YYYY-MM-DD")
-    //             .toUpperCase()} PART ${i + 1}`,
-    //     type: type,
-    //     public:
-    //       config.youtube.multiTrack &&
-    //       type === "live" &&
-    //       config.youtube.public
-    //         ? true
-    //         : !config.youtube.multiTrack &&
-    //           type === "vod" &&
-    //           config.youtube.public
-    //         ? true
-    //         : false,
-    //     duration: await getDuration(paths[i]),
-    //     vod: vod,
-    //     part: i + 1,
-    //   };
-    //   await youtube.upload(data, app);
-    //   fs.unlinkSync(paths[i]);
-    // }
-    // setTimeout(async () => {
-    //   await youtube.saveChapters(vodId, app, type);
-    //   setTimeout(() => youtube.saveParts(vodId, app, type), 30000);
-    // }, 30000);
-    // if (config.drive.upload) fs.unlinkSync(vodPath);
+    for (let i = 0; i < paths.length; i++) {
+      const data = {
+        path: paths[i],
+        title:
+          type === "vod"
+            ? `${config.channel} ${
+                vod.platform.charAt(0).toUpperCase() + vod.platform.slice(1)
+              } VOD - ${dayjs(vod.createdAt)
+                .tz(config.timezone)
+                .format("YYYY-MM-DD")
+                .toUpperCase()} PART ${i + 1}`
+            : `${config.channel} ${
+                vod.platform.charAt(0).toUpperCase() + vod.platform.slice(1)
+              }  Live VOD - ${dayjs(vod.createdAt)
+                .tz(config.timezone)
+                .format("YYYY-MM-DD")
+                .toUpperCase()} PART ${i + 1}`,
+        type: type,
+        public:
+          config.youtube.multiTrack &&
+          type === "live" &&
+          config.youtube.public
+            ? true
+            : !config.youtube.multiTrack &&
+              type === "vod" &&
+              config.youtube.public
+            ? true
+            : false,
+        duration: await getDuration(paths[i]),
+        vod: vod,
+        part: i + 1,
+      };
+      await youtube.upload(data, app);
+      fs.unlinkSync(paths[i]);
+    }
+    setTimeout(async () => {
+      await youtube.saveChapters(vodId, app, type);
+      setTimeout(() => youtube.saveParts(vodId, app, type), 30000);
+    }, 30000);
+    if (config.drive.upload) fs.unlinkSync(vodPath);
     return vodPath;
 
   }
