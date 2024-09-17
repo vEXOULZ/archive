@@ -508,6 +508,7 @@ module.exports.splitVideoVodChapters = async (vodPath, duration, vodId, vodChapt
   let current_chapter = 0;
 
   let start = vodChapters[current_chapter].start
+  let end = start;
 
   while (start < duration) {
     await new Promise((resolve, reject) => {
@@ -527,7 +528,7 @@ module.exports.splitVideoVodChapters = async (vodPath, duration, vodId, vodChapt
         return;
       }
 
-      let end = start + config.youtube.splitDuration
+      end = start + config.youtube.splitDuration
       if (end > duration) end = duration;
 
       while (vodChapters[current_chapter].start < end) {
