@@ -1300,6 +1300,14 @@ module.exports.getLogs = async (vodId, app) => {
     } seconds`
   );
 
+  
+  console.logs(`First comment time: ${comments[0].content_offset_seconds}`)
+  console.logs("Sorting comments")
+  comments.sort(function(a, b) { 
+    return a.content_offset_seconds - b.content_offset_seconds;
+  })
+  console.logs(`First comment time: ${comments[0].content_offset_seconds}`)
+
   await app
     .service("logs")
     .create(comments)
