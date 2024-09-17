@@ -539,7 +539,7 @@ module.exports.splitVideoVodChapters = async (vodPath, duration, vodId, vodChapt
           break;
         }
         current_chapter += 1;
-        if (current_chapter === vodChapters.length - 1) break;
+        if (current_chapter === vodChapters.length) break;
       }
 
       let cut = end - start;
