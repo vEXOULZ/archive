@@ -517,14 +517,13 @@ module.exports.splitVideoVodChapters = async (vodPath, duration, vodId, vodChapt
       console.info(`Trying to split ${vodPath} | part from ${start}`);
 
       while (config.youtube.restrictedGames.includes(vodChapters[current_chapter].name)) {
-        start = vodChapters[current_chapter].end
-        console.info(`!! SKIP ${vodPath}. [${current_chapter}] ${vodChapters[current_chapter].name}. [${vodChapters[current_chapter].start} to ${vodChapters[current_chapter].end}] / ${duration}`);
+        start = vodChapters[current_chapter].start + vodChapters[current_chapter].end
+        console.info(`!! SKIP ${vodPath}. [${current_chapter}] ${vodChapters[current_chapter].name}. [${vodChapters[current_chapter].start} to ${vodChapters[current_chapter].start + vodChapters[current_chapter].end}] / ${duration}`);
         current_chapter += 1;
         if (current_chapter === vodChapters.length) break;
       }
   
       if (current_chapter === vodChapters.length) {
-        console.info(`Trying to split ${vodPath} | end`);
         return;
       }
 
@@ -535,7 +534,7 @@ module.exports.splitVideoVodChapters = async (vodPath, duration, vodId, vodChapt
         console.info(`Trying to split ${vodPath} | testing [${current_chapter}] ${vodChapters[current_chapter].name}`);
         if (config.youtube.restrictedGames.includes(vodChapters[current_chapter].name)) {
           end = vodChapters[current_chapter].start
-          console.info(`!! SKIP ${vodPath}. [${current_chapter}] ${vodChapters[current_chapter].name}. [${vodChapters[current_chapter].start} to ${vodChapters[current_chapter].end}] / ${duration}`);
+          console.info(`!! SKIP ${vodPath}. [${current_chapter}] ${vodChapters[current_chapter].name}. [${vodChapters[current_chapter].start} to ${vodChapters[current_chapter].start + vodChapters[current_chapter].end}] / ${duration}`);
           break;
         }
         current_chapter += 1;
@@ -583,6 +582,7 @@ module.exports.splitVideoVodChapters = async (vodPath, duration, vodId, vodChapt
       });
     start = end;
   }
+  console.info(`Trying to split ${vodPath} =================== END`);
   return paths;
 };
 
