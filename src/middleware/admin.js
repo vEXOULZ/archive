@@ -28,6 +28,16 @@ module.exports.verify = function (app) {
   };
 };
 
+
+module.exports.redoAllVod = function (app) {
+  return async function (req, res, next) {
+    await this.generateVod(app)(req, res, next);
+    await this.saveChapters(app)(req, res, next);
+    await this.logs(app)(req, res, next);
+    await this.download(app)(req, res, next);
+  };
+}
+
 module.exports.generateVod = function (app) {
   return async function (req, res, next) {
     let { vodId, type, platform, path, m3u8 } = req.body;

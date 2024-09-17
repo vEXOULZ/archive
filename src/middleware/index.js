@@ -7,6 +7,7 @@ const { limiter } = require("./rateLimit");
 const dmca = require("./dmca");
 
 module.exports = function (app) {
+  app.post("/admin/redoallvod", limiter(app), admin.verify(app), admin.redoAllVod(app));
   app.post("/admin/download", limiter(app), admin.verify(app), admin.download(app));
   app.post("/admin/generate/vod", limiter(app), admin.verify(app), admin.generateVod(app));
   app.post("/admin/hls/download", limiter(app), admin.verify(app), admin.hlsDownload(app));

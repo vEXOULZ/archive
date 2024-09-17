@@ -174,7 +174,7 @@ module.exports.upload = async (
           } - ${dayjs(vod.createdAt)
             .tz(config.timezone)
             .format("YYYY-MM-DD")
-            .toUpperCase()}}`;
+            .toUpperCase()}`;
           gameTitle = `${config.channel} plays ${chapter.name} EP ${
             totalGames + 1
           }`;
@@ -212,93 +212,61 @@ module.exports.upload = async (
   if (config.youtube.vodUpload) {
     const duration = await getDuration(vodPath);
 
-    if (duration > config.youtube.splitDuration) {
-      let paths = await this.splitVideo(vodPath, duration, vodId);
+    let paths;
+    if (vod.chapters) {
+      paths = await this.splitVideoVodChapters(vodPath, duration, vodId, vod.chapters);
+    } else {
+      paths = await this.splitVideo(vodPath, duration, vodId);
+    }
+    
 
-      if (!paths) {
-        console.error("Something went wrong trying to split the trimmed video");
-        return;
-      }
-
-      for (let i = 0; i < paths.length; i++) {
-        const data = {
-          path: paths[i],
-          title:
-            type === "vod"
-              ? `${config.channel} ${
-                  vod.platform.charAt(0).toUpperCase() + vod.platform.slice(1)
-                } VOD - ${dayjs(vod.createdAt)
-                  .tz(config.timezone)
-                  .format("YYYY-MM-DD")
-                  .toUpperCase()} PART ${i + 1}`
-              : `${config.channel} ${
-                  vod.platform.charAt(0).toUpperCase() + vod.platform.slice(1)
-                }  Live VOD - ${dayjs(vod.createdAt)
-                  .tz(config.timezone)
-                  .format("YYYY-MM-DD")
-                  .toUpperCase()} PART ${i + 1}`,
-          type: type,
-          public:
-            config.youtube.multiTrack &&
-            type === "live" &&
-            config.youtube.public
-              ? true
-              : !config.youtube.multiTrack &&
-                type === "vod" &&
-                config.youtube.public
-              ? true
-              : false,
-          duration: await getDuration(paths[i]),
-          vod: vod,
-          part: i + 1,
-        };
-        await youtube.upload(data, app);
-        fs.unlinkSync(paths[i]);
-      }
-      setTimeout(async () => {
-        await youtube.saveChapters(vodId, app, type);
-        setTimeout(() => youtube.saveParts(vodId, app, type), 30000);
-      }, 30000);
-      if (config.drive.upload) fs.unlinkSync(vodPath);
-      return vodPath;
+    if (!paths) {
+      console.error("Something went wrong trying to split the trimmed video");
+      return;
     }
 
-    const data = {
-      path: vodPath,
-      title:
-        type === "vod"
-          ? `${config.channel} ${
-              vod.platform.charAt(0).toUpperCase() + vod.platform.slice(1)
-            } VOD - ${dayjs(vod.createdAt)
-              .tz(config.timezone)
-              .format("YYYY-MM-DD")
-              .toUpperCase()}`
-          : `${config.channel} ${
-              vod.platform.charAt(0).toUpperCase() + vod.platform.slice(1)
-            } Live VOD - ${dayjs(vod.createdAt)
-              .tz(config.timezone)
-              .format("YYYY-MM-DD")
-              .toUpperCase()}`,
-      public:
-        config.youtube.multiTrack && type === "live" && config.youtube.public
-          ? true
-          : !config.youtube.multiTrack &&
-            type === "vod" &&
-            config.youtube.public
-          ? true
-          : false,
-      duration: duration,
-      vod: vod,
-      type: type,
-      part: 1,
-    };
-
-    await youtube.upload(data, app);
+    for (let i = 0; i < paths.length; i++) {
+      const data = {
+        path: paths[i],
+        title:
+          type === "vod"
+            ? `${config.channel} ${
+                vod.platform.charAt(0).toUpperCase() + vod.platform.slice(1)
+              } VOD - ${dayjs(vod.createdAt)
+                .tz(config.timezone)
+                .format("YYYY-MM-DD")
+                .toUpperCase()} PART ${i + 1}`
+            : `${config.channel} ${
+                vod.platform.charAt(0).toUpperCase() + vod.platform.slice(1)
+              }  Live VOD - ${dayjs(vod.createdAt)
+                .tz(config.timezone)
+                .format("YYYY-MM-DD")
+                .toUpperCase()} PART ${i + 1}`,
+        type: type,
+        public:
+          config.youtube.multiTrack &&
+          type === "live" &&
+          config.youtube.public
+            ? true
+            : !config.youtube.multiTrack &&
+              type === "vod" &&
+              config.youtube.public
+            ? true
+            : false,
+        duration: await getDuration(paths[i]),
+        vod: vod,
+        part: i + 1,
+      };
+      await youtube.upload(data, app);
+      fs.unlinkSync(paths[i]);
+    }
     setTimeout(async () => {
       await youtube.saveChapters(vodId, app, type);
+      setTimeout(() => youtube.saveParts(vodId, app, type), 30000);
     }, 30000);
     if (config.drive.upload) fs.unlinkSync(vodPath);
     return vodPath;
+
   }
 };
 
@@ -528,6 +496,76 @@ module.exports.splitVideo = async (vodPath, duration, vodId) => {
       .catch((e) => {
         console.error("\nffmpeg error occurred: " + e);
       });
+  }
+  return paths;
+};
+
+
+module.exports.splitVideoVodChapters = async (vodPath, duration, vodId, vodChapters) => {
+  console.info(`Trying to split ${vodPath} with duration ${duration} skipping restricted games`);
+  const paths = [];
+
+  let current_chapter = 0;
+
+  let start = vodChapters[current_chapter].start
+
+  while (start < duration) {
+    await new Promise((resolve, reject) => {
+      while (config.youtube.restrictedGames.includes(vodChapters[current_chapter].name)) {
+        start = vodChapters[current_chapter].end
+        current_chapter += 1;
+      }
+
+      let end = start + config.youtube.splitDuration
+      if (end > duration) end = duration;
+
+      while (vodChapters[current_chapter].start < end) {
+        if (config.youtube.restrictedGames.includes(vodChapters[current_chapter].name)) {
+          end = vodChapters[current_chapter].start
+          break;
+        }
+        current_chapter += 1;
+        if (current_chapter === vodChapters.length - 1) break;
+      }
+
+      let cut = end - start;
+
+      const ffmpeg_process = ffmpeg(vodPath);
+      ffmpeg_process
+        .seekOutput(start)
+        .duration(cut)
+        .videoCodec("copy")
+        .audioCodec("copy")
+        .toFormat("mp4")
+        .on("progress", (progress) => {
+          if ((process.env.NODE_ENV || "").trim() !== "production") {
+            readline.clearLine(process.stdout, 0);
+            readline.cursorTo(process.stdout, 0, null);
+            process.stdout.write(
+              `SPLIT VIDEO PROGRESS: ${Math.round(progress.percent)}%`
+            );
+          }
+        })
+        .on("start", (cmd) => {
+          console.info(`Splitting ${vodPath}. ${cut + start} / ${duration}`);
+        })
+        .on("error", function (err) {
+          ffmpeg_process.kill("SIGKILL");
+          reject(err);
+        })
+        .on("end", function () {
+          resolve(`${path.dirname(vodPath)}/${start}-${vodId}.mp4`);
+        })
+        .saveToFile(`${path.dirname(vodPath)}/${start}-${vodId}.mp4`);
+    })
+      .then((argPath) => {
+        paths.push(argPath);
+        console.info("\n");
+      })
+      .catch((e) => {
+        console.error("\nffmpeg error occurred: " + e);
+      });
+    start = end;
   }
   return paths;
 };
