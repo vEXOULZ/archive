@@ -521,7 +521,7 @@ module.exports.splitVideoVodChapters = async (vodPath, duration, vodId, vodChapt
         console.info(`!! SKIP ${vodPath}. [${current_chapter}] ${vodChapters[current_chapter].name}. [${vodChapters[current_chapter].start} to ${vodChapters[current_chapter].start + vodChapters[current_chapter].end}] / ${duration}`);
         current_chapter += 1;
         // no more data to collect
-        if (current_chapter === vodChapters.length) return;
+        if (current_chapter === vodChapters.length) reject("end of data");
       }
 
       end = start + config.youtube.splitDuration
