@@ -38,7 +38,7 @@ module.exports = function (app) {
         responseJson = await offsetSearch(
           app,
           vodId,
-          praseInt(content_offset_seconds),
+          parseInt(content_offset_seconds),
           vodData
         );
 
