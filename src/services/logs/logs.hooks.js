@@ -14,7 +14,7 @@ module.exports = {
 
   after: {
     all: [],
-    find: [modify()],
+    find: [], // [modify()],
     get: [],
     create: [],
     update: [],
