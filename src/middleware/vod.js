@@ -514,11 +514,11 @@ module.exports.splitVideoVodChapters = async (vodPath, duration, vodId, vodChapt
     await new Promise((resolve, reject) => {
       console.info(`Trying to split ${vodPath} | ==========================`);
   
-      console.info(`Trying to split ${vodPath} | part 1 from ${start}`);
+      console.info(`Trying to split ${vodPath} | part from ${start}`);
 
       while (config.youtube.restrictedGames.includes(vodChapters[current_chapter].name)) {
         start = vodChapters[current_chapter].end
-        console.info(`Trying to split ${vodPath} | part 1 start skipping [${current_chapter}] ${vodChapters[current_chapter].name}`);
+        console.info(`Trying to split ${vodPath} | part start skipping [${current_chapter}] ${vodChapters[current_chapter].name}`);
         current_chapter += 1;
         if (current_chapter === vodChapters.length) break;
       }
@@ -532,9 +532,10 @@ module.exports.splitVideoVodChapters = async (vodPath, duration, vodId, vodChapt
       if (end > duration) end = duration;
 
       while (vodChapters[current_chapter].start < end) {
+        console.info(`Trying to split ${vodPath} | testing [${current_chapter}] ${vodChapters[current_chapter].name}`);
         if (config.youtube.restrictedGames.includes(vodChapters[current_chapter].name)) {
           end = vodChapters[current_chapter].start
-          console.info(`Trying to split ${vodPath} | part 1 ending before [${current_chapter}] ${vodChapters[current_chapter].name}`);
+          console.info(`Trying to split ${vodPath} | part ending before [${current_chapter}] ${vodChapters[current_chapter].name}`);
           break;
         }
         current_chapter += 1;
@@ -543,7 +544,7 @@ module.exports.splitVideoVodChapters = async (vodPath, duration, vodId, vodChapt
 
       let cut = end - start;
   
-      console.info(`Trying to split ${vodPath} | part 1 from ${start} to ${end}`);
+      console.info(`Trying to split ${vodPath} | part from ${start} to ${end}`);
 
       const ffmpeg_process = ffmpeg(vodPath);
       ffmpeg_process
