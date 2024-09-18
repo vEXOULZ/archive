@@ -32,6 +32,7 @@ module.exports.upload = async (vodId, path, app, type = "vod") => {
           readline.clearLine(process.stdout, 0);
           readline.cursorTo(process.stdout, 0, null);
           process.stdout.write(`DRIVE UPLOAD PROGRESS: ${Math.round(progress)}%`);
+          console.log(`DRIVE UPLOAD PROGRESS: ${Math.round(progress)}%`);
         }
       },
     }
