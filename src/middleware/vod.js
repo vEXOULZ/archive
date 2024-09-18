@@ -1166,7 +1166,7 @@ module.exports.saveChapters = async (vodId, app, duration) => {
       duration: "00:00:00",
       start: 0,
       end: duration,
-      retricted: chapter.game ? config.youtube.restrictedGames.includes(chapter.game.displayName) : false,
+      restricted: chapter.game ? config.youtube.restrictedGames.includes(chapter.game.displayName) : false,
     });
   } else {
     for (let chapter of chapters) {
@@ -1189,7 +1189,7 @@ module.exports.saveChapters = async (vodId, app, duration) => {
           chapter.node.durationMilliseconds === 0
             ? duration - chapter.node.positionMilliseconds / 1000
             : chapter.node.durationMilliseconds / 1000,
-        retricted: chapter.node.details.game ? config.youtube.restrictedGames.includes(chapter.node.details.game.displayName) : false,
+        restricted: chapter.node.details.game ? config.youtube.restrictedGames.includes(chapter.node.details.game.displayName) : false,
       });
     }
   }
