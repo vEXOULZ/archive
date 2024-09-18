@@ -1047,7 +1047,7 @@ const downloadTSFiles = async (m3u8, dir, baseURL, vodId) => {
     })
       .then((response) => {
         if ((process.env.NODE_ENV || "").trim() !== "production") {
-          console.info(`Downloaded ${segment.uri}`);
+          console.info(`Downloaded ${segment.uri} from ${baseURL}/${segment.uri}`);
         }
         response.data.pipe(fs.createWriteStream(`${dir}/${segment.uri}`));
       })
