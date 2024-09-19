@@ -354,6 +354,48 @@ module.exports.deleteVod = function (app) {
       .catch((e) => {
         console.error(e);
       });
+
+    await app
+      .service("emotes")
+      .remove(null, {
+        query: {
+          vod_id: vodId,
+        },
+      })
+      .then(() => {
+        console.info(`Deleted emotes for ${vodId}`);
+      })
+      .catch((e) => {
+        console.error(e);
+      });
+
+    await app
+      .service("games")
+      .remove(null, {
+        query: {
+          vod_id: vodId,
+        },
+      })
+      .then(() => {
+        console.info(`Deleted games for ${vodId}`);
+      })
+      .catch((e) => {
+        console.error(e);
+      });
+
+    await app
+      .service("streams")
+      .remove(null, {
+        query: {
+          vod_id: vodId,
+        },
+      })
+      .then(() => {
+        console.info(`Deleted streams for ${vodId}`);
+      })
+      .catch((e) => {
+        console.error(e);
+      });
   };
 };
 
