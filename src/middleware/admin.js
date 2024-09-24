@@ -140,7 +140,7 @@ module.exports.download = function (app) {
         return;
       }
       const vodPath = await vod.upload(vodId, app, path, type);
-      if (vodPath) fs.unlinkSync(vodPath);
+      // if (vodPath) fs.unlinkSync(vodPath);
       return;
     } else {
       return res.status(404).json({ error: false, msg: "No Vod Data" });
