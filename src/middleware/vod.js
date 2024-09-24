@@ -258,13 +258,13 @@ module.exports.upload = async (
         part: i + 1,
       };
       await youtube.upload(data, app);
-      fs.unlinkSync(paths[i]);
+      // fs.unlinkSync(paths[i]); // FIXME
     }
     setTimeout(async () => {
       await youtube.saveChapters(vodId, app, type);
       setTimeout(() => youtube.saveParts(vodId, app, type), 30000);
     }, 30000);
-    if (config.drive.upload) fs.unlinkSync(vodPath);
+    // if (config.drive.upload) fs.unlinkSync(vodPath); // FIXME
     return vodPath;
 
   }
@@ -537,6 +537,7 @@ module.exports.splitVideoVodChapters = async (vodPath, duration, vodId, vodChapt
           console.info(`!! END BEFORE ${vodPath}. [${current_chapter}] ${vodChapters[current_chapter].name}. [${vodChapters[current_chapter].start} to ${vodChapters[current_chapter].start + vodChapters[current_chapter].end}] / ${duration}`);
           break;
         }
+        if (vodChapters[current_chapter].start + vodChapters[current_chapter].end > end) break;
         current_chapter += 1;
         if (current_chapter === vodChapters.length) break;
       }
