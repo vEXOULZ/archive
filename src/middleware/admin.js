@@ -154,7 +154,7 @@ module.exports.refreshToken = function (app) {
       return null;
     });
 
-  if (data === null) res.status(400).json({ error: true, msg: "Bad request" });
+  if (data === null) return res.status(400).json({ error: true, msg: "Bad request" });
 
   if (scopeStr === 'youtube') {
     config.youtube.auth = data;
