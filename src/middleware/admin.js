@@ -118,6 +118,61 @@ module.exports.generateVod = function (app) {
   };
 };
 
+module.exports.refreshToken = function (app) {
+  return async function (req, res, next) {
+    let { code, scope} = req.body;
+    if (!code) return res.status(400).json({ error: true, msg: "No code" });
+    if (!scope) return res.status(400).json({ error: true, msg: "No scope" });
+
+    let scopeStr;
+    if (scope === config.drive.auth.scope) scopeStr = 'drive';
+    else if (scope === config.youtube.auth.scope) scopeStr = 'youtube';
+    else return res.status(400).json({ error: true, msg: "Unrecognized scope" });
+
+    const data = await axios({
+      url: "https://oauth2.googleapis.com/token",
+      method: "POST",
+      headers: {
+        Accept: "*/*",
+        "Content-Type": "text/plain;charset=UTF-8",
+      },
+      data: {
+        code: code,
+        client_id: config.google.client_id,
+        client_secret: config.google.client_secret,
+        redirect_uri: config.google.redirect_uri,
+      },
+    })
+    .then((response) => {
+      return response;
+    })
+    .catch((e) => {
+      console.error(e.response ? e.response.data : e);
+      return null;
+    });
+
+  if (data === null) res.status(400).json({ error: true, msg: "No scope" });
+
+  if (scopeStr === 'youtube') {
+    config.youtube.auth = data;
+    let oauth2Client = app.get("ytOauth2Client");
+    oauth2Client.setCredentials(config.youtube.auth);
+  } else if (scopeStr === 'drive') {
+    config.drive.auth = data;
+    let oauth2Client = app.get("driveOauth2Client");
+    oauth2Client.setCredentials(config.drive.auth);
+  }
+
+  fs.writeFile(path.resolve(__dirname, "../../config/config.json"), JSON.stringify(config, null, 4), (err) => {
+    if (err) return console.error(err);
+    console.info(`Set ${scopeStr} refresh token`);
+  });
+
+  };
+};
+
+
+
 module.exports.download = function (app) {
   return async function (req, res, next) {
     let { vodId, type, platform, path, m3u8 } = req.body;
