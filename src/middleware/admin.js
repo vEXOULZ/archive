@@ -142,7 +142,7 @@ module.exports.refreshToken = function (app) {
         code: code,
         client_id: config.google.client_id,
         client_secret: config.google.client_secret,
-        redirect_uri: "http://localhost",
+        redirect_uri: config.google.redirect_uri,
         grant_type: "authorization_code",
       },
     })
