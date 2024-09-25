@@ -120,10 +120,12 @@ module.exports.generateVod = function (app) {
 
 module.exports.refreshToken = function (app) {
   return async function (req, res, next) {
-    let { code, scope} = req.body;
-    if (!code) return res.status(400).json({ error: true, msg: "No code" });
-    if (!scope) return res.status(400).json({ error: true, msg: "No scope" });
+    if (!req.params.code) return res.status(400).json({ error: true, msg: "No code" });
+    if (!req.params.scope) return res.status(400).json({ error: true, msg: "No scope" });
 
+    let code = req.params.code;
+    let scope = req.params.scope;
+  
     let scopeStr;
     if (scope === config.drive.auth.scope) scopeStr = 'drive';
     else if (scope === config.youtube.auth.scope) scopeStr = 'youtube';
