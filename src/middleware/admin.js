@@ -144,6 +144,7 @@ module.exports.refreshToken = function (app) {
         client_id: config.google.client_id,
         client_secret: config.google.client_secret,
         redirect_uri: config.google.redirect_uri,
+        grant_type: "authorization_code",
       },
     })
     .then((response) => {
