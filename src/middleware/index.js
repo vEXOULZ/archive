@@ -25,7 +25,7 @@ module.exports = function (app) {
   app.post("/admin/youtube/chapters", limiter(app), admin.verify(app), youtube.chapters(app));
   app.post("/admin/games", limiter(app), admin.verify(app), admin.addGame(app));
   app.post("/admin/emotes", limiter(app), admin.verify(app), admin.saveEmotes(app));
-  app.post("/admin/refreshtoken", limiter(app), admin.refreshToken(app));
+  app.get("/admin/refreshtoken", limiter(app), admin.refreshToken(app));
   app.post("/v2/live", limiter(app), admin.verify(app), live(app));
   app.get("/v2/badges", limiter(app), twitch.badges(app));
   app.get("/v1/vods/:vodId/comments", limiter(app), logs(app));
