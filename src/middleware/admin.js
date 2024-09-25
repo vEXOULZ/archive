@@ -3,6 +3,7 @@ const axios = require("axios");
 const twitch = require("./twitch");
 const kick = require("./kick");
 const fs = require("fs");
+const path = require("path");
 const config = require("../../config/config.json");
 const drive = require("./drive");
 const emotes = require("./emotes");
@@ -127,9 +128,6 @@ module.exports.refreshToken = function (app) {
     let code = req.query.code;
     let scope = req.query.scope;
 
-    console.info(config.drive)
-    console.info(config.youtube)
-  
     let scopeStr;
     if (config.drive.auth.scope.split(' ').includes(scope.split(' ')[0])) scopeStr = 'drive';
     else if (config.youtube.auth.scope.split(' ').includes(scope.split(' ')[0])) scopeStr = 'youtube';
@@ -139,8 +137,6 @@ module.exports.refreshToken = function (app) {
       url: "https://oauth2.googleapis.com/token",
       method: "POST",
       headers: {
-        Accept: "*/*",
-        "Content-Type": "text/plain;charset=UTF-8",
       },
       data: {
         code: code,
@@ -158,7 +154,7 @@ module.exports.refreshToken = function (app) {
       return null;
     });
 
-  if (data === null) res.status(400).json({ error: true, msg: "No scope" });
+  if (data === null) res.status(400).json({ error: true, msg: "Bad request" });
 
   if (scopeStr === 'youtube') {
     config.youtube.auth = data;
