@@ -120,6 +120,7 @@ module.exports.generateVod = function (app) {
 
 module.exports.refreshToken = function (app) {
   return async function (req, res, next) {
+    console.info(req.params)
     if (!req.params.code) return res.status(400).json({ error: true, msg: "No code" });
     if (!req.params.scope) return res.status(400).json({ error: true, msg: "No scope" });
 
