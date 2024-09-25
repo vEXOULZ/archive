@@ -126,6 +126,9 @@ module.exports.refreshToken = function (app) {
 
     let code = req.query.code;
     let scope = req.query.scope;
+
+    console.info(config.drive)
+    console.info(config.youtube)
   
     let scopeStr;
     if (config.drive.auth.scope.split(' ').includes(scope.split(' ')[0])) scopeStr = 'drive';
