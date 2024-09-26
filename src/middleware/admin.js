@@ -169,6 +169,7 @@ module.exports.refreshToken = function (app) {
 
     fs.writeFile(path.resolve(__dirname, "../../config/config.json"), JSON.stringify(config, null, 4), (err) => {
       if (err) return console.error(err);
+      res.status(200).json({ error: false, msg: `Set ${scopeStr} refresh token` });
       console.info(`Set ${scopeStr} refresh token`);
     });
 
