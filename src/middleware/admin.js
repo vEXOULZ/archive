@@ -154,22 +154,23 @@ module.exports.refreshToken = function (app) {
       return null;
     });
 
-  if (data === null) return res.status(400).json({ error: true, msg: "Bad request" });
+    if (data === null) return res.status(400).json({ error: true, msg: "Bad request" });
+    if (data.status != 200) return res.status(400).json({ error: true, msg: `Request ${data.status}` });
 
-  if (scopeStr === 'youtube') {
-    config.youtube.auth = data;
-    let oauth2Client = app.get("ytOauth2Client");
-    oauth2Client.setCredentials(config.youtube.auth);
-  } else if (scopeStr === 'drive') {
-    config.drive.auth = data;
-    let oauth2Client = app.get("driveOauth2Client");
-    oauth2Client.setCredentials(config.drive.auth);
-  }
+    if (scopeStr === 'youtube') {
+      config.youtube.auth = data.data;
+      let oauth2Client = app.get("ytOauth2Client");
+      oauth2Client.setCredentials(config.youtube.auth);
+    } else if (scopeStr === 'drive') {
+      config.drive.auth = data.data;
+      let oauth2Client = app.get("driveOauth2Client");
+      oauth2Client.setCredentials(config.drive.auth);
+    }
 
-  fs.writeFile(path.resolve(__dirname, "../../config/config.json"), JSON.stringify(config, null, 4), (err) => {
-    if (err) return console.error(err);
-    console.info(`Set ${scopeStr} refresh token`);
-  });
+    fs.writeFile(path.resolve(__dirname, "../../config/config.json"), JSON.stringify(config, null, 4), (err) => {
+      if (err) return console.error(err);
+      console.info(`Set ${scopeStr} refresh token`);
+    });
 
   };
 };
