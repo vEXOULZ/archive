@@ -129,8 +129,8 @@ module.exports.refreshToken = function (app) {
     let scope = req.query.scope;
 
     let scopeStr;
-    if (config.drive.auth.scope.split(' ').includes(scope.split(' ')[0])) scopeStr = 'drive';
-    else if (config.youtube.auth.scope.split(' ').includes(scope.split(' ')[0])) scopeStr = 'youtube';
+    if (scope.split(' ')[0].includes('drive')) scopeStr = 'drive';
+    else if (scope.split(' ')[0].includes('youtube')) scopeStr = 'youtube';
     else return res.status(400).json({ error: true, msg: "Unrecognized scope" });
 
     const data = await axios({
