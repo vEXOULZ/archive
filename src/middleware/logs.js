@@ -179,7 +179,6 @@ const offsetSearch = async (app, vodId, content_offset_seconds, vodData) => {
 
   let cursor, comments;
 
-  console.info(`${data.length}`)
   if (data.length === 201) {
     cursor = Buffer.from(
       JSON.stringify({
@@ -265,7 +264,6 @@ const returnStartingId = async (app, vodId, vodData) => {
     });
   }
 
-  console.info(`!!! ${startingId}`)
   return startingId;
 };
 
