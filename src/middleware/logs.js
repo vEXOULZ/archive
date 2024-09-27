@@ -243,6 +243,8 @@ const returnStartingId = async (app, vodId, vodData) => {
     .then((data) => data)
     .catch(() => null);
 
+  console.info(`!!! ${startingId}`)
+
   if (!startingId) {
     let data = await app
       .service("logs")
@@ -261,9 +263,11 @@ const returnStartingId = async (app, vodId, vodData) => {
         },
       })
       .catch(() => null);
+    console.info(`!!! ${data}`)
 
     if (!data) return null;
 
+    console.info(`!!! ${data.length}`)
     if (data.length === 0) return null;
 
     startingId = data[0]._id;
@@ -273,6 +277,7 @@ const returnStartingId = async (app, vodId, vodData) => {
     });
   }
 
+  console.info(`!!! ${startingId}`)
   return startingId;
 };
 
