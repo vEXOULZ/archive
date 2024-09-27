@@ -137,6 +137,8 @@ const cursorSearch = async (app, vodId, cursorJson) => {
 
 const offsetSearch = async (app, vodId, content_offset_seconds, vodData) => {
   const startingId = await returnStartingId(app, vodId, vodData);
+  console.info("==================")
+  console.info(`${startingId}`)
   if (!startingId) return null;
 
   const commentId = await returnCommentId(
@@ -145,6 +147,7 @@ const offsetSearch = async (app, vodId, content_offset_seconds, vodData) => {
     content_offset_seconds,
     vodData
   );
+  console.info(`${commentId}`)
   if (!commentId) return null;
 
   let index = parseInt(commentId) - parseInt(startingId);
@@ -175,12 +178,15 @@ const offsetSearch = async (app, vodId, content_offset_seconds, vodData) => {
 
   
 
+  console.info(`${data}`)
   if (!data) return null;
 
+  console.info(`${data.length}`)
   if (data.length === 0) return null;
 
   let cursor, comments;
 
+  console.info(`${data.length}`)
   if (data.length === 201) {
     cursor = Buffer.from(
       JSON.stringify({
@@ -189,6 +195,7 @@ const offsetSearch = async (app, vodId, content_offset_seconds, vodData) => {
         createdAt: vodData.createdAt,
       })
     ).toString("base64");
+    console.info(`${cursor}`)
   }
 
   comments = data.slice(0, 200);
