@@ -1288,7 +1288,7 @@ module.exports.getLogs = async (vodId, app) => {
         content_offset_seconds: node.contentOffsetSeconds,
         message: message.fragments,
         user_badges: message.userBadges,
-        user_color: message.userColor,
+        user_color: message.userColor ? message.userColor : "#999999",
         createdAt: node.createdAt,
       });
     }
