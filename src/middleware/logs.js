@@ -263,6 +263,9 @@ const returnStartingId = async (app, vodId, vodData) => {
         },
       })
       .catch(() => null);
+      
+    console.info(`!!! ${vodId}`)
+    console.info(`!!! ${vodData}`)
     console.info(`!!! ${data}`)
 
     if (!data) return null;
