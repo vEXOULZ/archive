@@ -1309,7 +1309,9 @@ module.exports.getLogs = async (vodId, app) => {
     .then(() => {
       console.info(`Saved all comments in DB for vod ${vodId}`);
     })
-    .catch(() => {});
+    .catch((e) => {
+      console.error(e);
+    });
 };
 
 module.exports.manualLogs = async (commentsPath, vodId, app) => {
