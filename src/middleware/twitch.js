@@ -55,9 +55,9 @@ module.exports.getVodTokenSig = async (vodID) => {
     data: {
       operationName: "PlaybackAccessToken",
       variables: {
-        isLive: false,
+        isLive: true,
         login: "",
-        isVod: true,
+        isVod: false,
         vodID: vodID,
         platform: "web",
         playerBackend: "mediaplayer",
