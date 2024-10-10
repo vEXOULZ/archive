@@ -928,7 +928,9 @@ module.exports.download = async (vodId, app, retry = 0, delay = 1) => {
     return;
   }
 
-  const tokenSig = await twitch.getVodTokenSig(vodId);
+  let tokenSig = await twitch.getLiveTokenSig(vodId);
+
+  if (!tokenSig) tokenSig = await twitch.getVodTokenSig(vodId);
   if (!tokenSig) {
     setTimeout(() => {
       this.download(vodId, app, retry, delay);
