@@ -225,7 +225,7 @@ module.exports.upload = async (
       return;
     }
 
-    for (let i = 0; i < paths.length; i++) {
+    for (let i = 5; i < paths.length; i++) {
       const data = {
         path: paths[i],
         title:
