@@ -471,9 +471,15 @@ module.exports.reUploadPart = function (app) {
       msg: `Reuploading ${vodId} Vod Part ${part}`,
     });
 
+    const vod_data = await app
+      .service("vods")
+      .get(vodId)
+      .then((data) => data)
+      .catch(() => null);
+
     let videoPath =
       type === "live"
-        ? `${config.livePath}/${config.twitch.username}/${vod_data.stream_id}.mp4`
+        ? `${config.livePath}/${config.twitch.username}/${vod_data.stream_id}/${vod_data.stream_id}.mp4`
         : `${config.vodPath}/${vodId}.mp4`;
 
     if (!(await fileExists(videoPath))) {
@@ -489,28 +495,15 @@ module.exports.reUploadPart = function (app) {
     if (!videoPath)
       return console.error(`Could not find a download source for ${vodId}`);
 
-    if (type === "live") {
-      await vod.liveUploadPart(
-        app,
-        vodId,
-        videoPath,
-        config.youtube.splitDuration * parseInt(part) - 1,
-        config.youtube.splitDuration,
-        part,
-        type
-      );
-    } else {
-      await vod.liveUploadPart(
-        app,
-        vodId,
-        videoPath,
-        config.youtube.splitDuration * parseInt(part) - 1,
-        config.youtube.splitDuration,
-        part,
-        type
-      );
-    }
-    fs.unlinkSync(videoPath);
+    await vod.liveUploadPart(
+      app,
+      vodId,
+      videoPath,
+      config.youtube.splitDuration * parseInt(part) - 1,
+      config.youtube.splitDuration,
+      part,
+      type
+    );
   };
 };
 
@@ -710,7 +703,15 @@ module.exports.vodUpload = function (app) {
       if (config.drive.upload) {
         videoPath = await drive.download(vodId, type, app);
       } else {
-        videoPath = null;
+        if (vodData.platform === "twitch") {
+          videoPath = await vod.mp4Download(vodId);
+        } else if (vodData.platform === "kick") {
+          videoPath = await kick.downloadMP4(
+            app,
+            config.kick.username,
+            game.vodId
+          );
+        }
       }
     }
 
@@ -731,24 +732,24 @@ module.exports.gameUpload = function (app) {
     if (chapterIndex == null)
       return res.status(400).json({ error: true, msg: "No chapter" });
 
-    let vod;
+    let vodData;
     await app
       .service("vods")
       .get(vodId)
       .then((data) => {
-        vod = data;
+        vodData = data;
       })
       .catch(() => {});
 
-    if (!vod)
-      res.status(404).json({
+    if (!vodData)
+      return res.status(404).json({
         error: true,
         msg: "Vod does not exist",
       });
 
-    const game = vod.chapters[chapterIndex];
+    const game = vodData.chapters[chapterIndex];
     if (!game)
-      res.status(404).json({
+      return res.status(404).json({
         error: true,
         msg: "Chapter does not exist",
       });
@@ -764,24 +765,119 @@ module.exports.gameUpload = function (app) {
 
     if (!(await fileExists(videoPath))) {
       if (config.drive.upload) {
-        videoPath = await drive.download(vodId, type, app);
+        videoPath = await drive.download(game.vodId, type, app);
       } else {
-        videoPath = null;
+        if (vodData.platform === "twitch") {
+          videoPath = await vod.mp4Download(game.vodId);
+        } else if (vodData.platform === "kick") {
+          videoPath = await kick.downloadMP4(
+            app,
+            config.kick.username,
+            game.vodId
+          );
+        }
       }
     }
 
     if (!videoPath)
       return console.error(
-        `Could not find a download source for ${req.body.vodId}`
+        `Could not find a download source for ${game.vodId}`
       );
 
     vod.manualGameUpload(
       app,
-      vodId,
+      vodData,
       {
+        gameId: null,
         vodId: vodId,
-        date: vod.createdAt,
+        date: vodData.createdAt,
         chapter: game,
+      },
+      videoPath
+    );
+  };
+};
+
+module.exports.reuploadGame = function (app) {
+  return async function (req, res, next) {
+    const { gameId, type } = req.body;
+    if (!gameId)
+      return res.status(400).json({ error: true, msg: "No game id" });
+    if (!type) return res.status(400).json({ error: true, msg: "No type" });
+
+    let game;
+    await app
+      .service("games")
+      .get(gameId)
+      .then((data) => {
+        game = data;
+      })
+      .catch(() => {});
+
+    if (!game)
+      return res.status(404).json({
+        error: true,
+        msg: "Game does not exist",
+      });
+
+    let vodData;
+    await app
+      .service("vods")
+      .get(game.vodId)
+      .then((data) => {
+        vodData = data;
+      })
+      .catch(() => {});
+
+    if (!vodData)
+      return res.status(404).json({
+        error: true,
+        msg: "Vod does not exist",
+      });
+
+    res.status(200).json({
+      error: false,
+      msg: `Uploading ${game.game_name} from ${game.vodId} Vod`,
+    });
+
+    let videoPath = `${type === "live" ? config.livePath : config.vodPath}/${
+      game.vodId
+    }.mp4`;
+
+    if (!(await fileExists(videoPath))) {
+      if (config.drive.upload) {
+        videoPath = await drive.download(game.vodId, type, app);
+      } else {
+        if (vodData.platform === "twitch") {
+          videoPath = await vod.mp4Download(game.vodId);
+        } else if (vodData.platform === "kick") {
+          videoPath = await kick.downloadMP4(
+            app,
+            config.kick.username,
+            game.vodId
+          );
+        }
+      }
+    }
+
+    if (!videoPath)
+      return console.error(
+        `Could not find a download source for ${game.vodId}`
+      );
+
+    vod.manualGameUpload(
+      app,
+      vodData,
+      {
+        gameId: game.id,
+        title: game.title,
+        vodId: game.vodId,
+        date: vodData.createdAt,
+        chapter: {
+          end: game.end_time,
+          start: game.start_time,
+          name: game.game_name,
+        },
       },
       videoPath
     );

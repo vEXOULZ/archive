@@ -82,7 +82,8 @@ module.exports.upload = async (
       }
 
       if (chapter.end > config.youtube.splitDuration) {
-        let paths = await this.splitVideo(trimmedPath, chapter.end, vodId);
+        const duration = await getDuration(trimmedPath);
+        let paths = await this.splitVideo(trimmedPath, duration, vodId);
         if (!paths) {
           console.error(
             "Something went wrong trying to split the trimmed video"
@@ -91,7 +92,8 @@ module.exports.upload = async (
         }
 
         for (let i = 0; i < paths.length; i++) {
-          let totalGames;
+          let totalGames, gameTitle, ytTitle;
+
           await app
             .service("games")
             .find({
@@ -107,7 +109,6 @@ module.exports.upload = async (
               console.error(e);
             });
 
-          let gameTitle, ytTitle;
           if (totalGames !== undefined) {
             ytTitle = `${config.channel} plays ${chapter.name} EP ${
               totalGames + 1
@@ -125,7 +126,7 @@ module.exports.upload = async (
               .tz(config.timezone)
               .format("YYYY-MM-DD")
               .toUpperCase()} PART ${i + 1}`;
-            gameTitle = `${config.channel} plays ${chapter.name}`;
+            gameTitle = `${chapter.name} PART ${i + 1}`;
           }
 
           await youtube.upload(
@@ -185,7 +186,7 @@ module.exports.upload = async (
             .tz(config.timezone)
             .format("YYYY-MM-DD")
             .toUpperCase()}`;
-          gameTitle = `${config.channel} plays ${chapter.name}`;
+          gameTitle = `${chapter.name}`;
         }
 
         await youtube.upload(
@@ -211,6 +212,8 @@ module.exports.upload = async (
 
   if (config.youtube.vodUpload) {
     const duration = await getDuration(vodPath);
+    await saveDuration(vodId, duration, app);
+    await this.saveChapters(vodId, app, duration);
 
     let paths;
     if (vod.chapters) {
@@ -324,7 +327,7 @@ module.exports.manualVodUpload = async (
   if (config.drive.upload) fs.unlinkSync(vodPath);
 };
 
-module.exports.manualGameUpload = async (app, game, videoPath) => {
+module.exports.manualGameUpload = async (app, vod, game, videoPath) => {
   const { vodId, date, chapter } = game;
   const { name, end, start } = chapter;
   console.info(
@@ -359,6 +362,7 @@ module.exports.manualGameUpload = async (app, game, videoPath) => {
               ? end
               : start + config.youtube.splitDuration * (i + 1),
           vod: vod,
+          gameId: game.gameId ? game.gameId + i : null,
         },
         app,
         false
@@ -380,6 +384,7 @@ module.exports.manualGameUpload = async (app, game, videoPath) => {
         start_time: start,
         end_time: end,
         vod: vod,
+        gameId: game.gameId,
       },
       app,
       false
@@ -461,12 +466,14 @@ module.exports.splitVideo = async (vodPath, duration, vodId) => {
       let cut = duration - start;
       if (cut > config.youtube.splitDuration)
         cut = config.youtube.splitDuration;
+      const pathName = `${path.dirname(vodPath)}/${start}-${
+        cut + start
+      }-${vodId}.mp4`;
       const ffmpeg_process = ffmpeg(vodPath);
       ffmpeg_process
-        .seekOutput(start)
-        .duration(cut)
         .videoCodec("copy")
         .audioCodec("copy")
+        .outputOptions([`-ss ${start}`, "-copyts", `-t ${cut}`])
         .toFormat("mp4")
         .on("progress", (progress) => {
           if ((process.env.NODE_ENV || "").trim() !== "production") {
@@ -478,16 +485,23 @@ module.exports.splitVideo = async (vodPath, duration, vodId) => {
           }
         })
         .on("start", (cmd) => {
-          console.info(`Splitting ${vodPath}. ${cut + start} / ${duration}`);
+          if ((process.env.NODE_ENV || "").trim() !== "production") {
+            console.info(cmd);
+          }
+          console.info(
+            `Splitting ${vodPath}. ${start} - ${
+              cut + start
+            } with a duration of ${duration}`
+          );
         })
         .on("error", function (err) {
           ffmpeg_process.kill("SIGKILL");
           reject(err);
         })
         .on("end", function () {
-          resolve(`${path.dirname(vodPath)}/${start}-${vodId}.mp4`);
+          resolve(pathName);
         })
-        .saveToFile(`${path.dirname(vodPath)}/${start}-${vodId}.mp4`);
+        .saveToFile(pathName);
     })
       .then((argPath) => {
         paths.push(argPath);
@@ -591,10 +605,9 @@ module.exports.trim = async (vodPath, vodId, start, end) => {
   await new Promise((resolve, reject) => {
     const ffmpeg_process = ffmpeg(vodPath);
     ffmpeg_process
-      .seekOutput(start)
       .videoCodec("copy")
       .audioCodec("copy")
-      .duration(end)
+      .outputOptions([`-ss ${start}`, "-copyts", `-t ${end}`])
       .toFormat("mp4")
       .on("progress", (progress) => {
         if ((process.env.NODE_ENV || "").trim() !== "production") {
@@ -841,7 +854,13 @@ module.exports.downloadLogs = async (vodId, app, cursor = null, retry = 1) => {
 
 //RETRY PARAM: Just to make sure whole vod is processed bc it takes awhile for twitch to update the vod even after a stream ends.
 //VOD TS FILES SEEMS TO UPDATE AROUND 5 MINUTES. DELAY IS TO CHECK EVERY X MIN.
-module.exports.download = async (vodId, app, retry = 0, delay = 1) => {
+module.exports.download = async (
+  vodId,
+  app,
+  retry = 0,
+  delay = 1,
+  liveDownload = false
+) => {
   if ((process.env.NODE_ENV || "").trim() !== "production")
     console.info(`${vodId} Download Retry: ${retry}`);
   const dir = `${config.vodPath}/${vodId}`;
@@ -859,12 +878,6 @@ module.exports.download = async (vodId, app, retry = 0, delay = 1) => {
 
   if (!vod)
     return console.error("Failed to download video: no VOD in database");
-
-  if (m3u8Exists) {
-    duration = await getDuration(m3u8Path);
-    await saveDuration(vodId, duration, app);
-    if (newVodData) await this.saveChapters(vodId, app, duration);
-  }
 
   if (
     duration >= config.youtube.splitDuration &&
@@ -933,7 +946,7 @@ module.exports.download = async (vodId, app, retry = 0, delay = 1) => {
   if (!tokenSig) tokenSig = await twitch.getVodTokenSig(vodId);
   if (!tokenSig) {
     setTimeout(() => {
-      this.download(vodId, app, retry, delay);
+      this.download(vodId, app, retry, delay, liveDownload);
     }, 1000 * 60 * delay);
     return console.error(`failed to get token/sig for ${vodId}`);
   }
@@ -945,7 +958,7 @@ module.exports.download = async (vodId, app, retry = 0, delay = 1) => {
   );
   if (!newVideoM3u8) {
     setTimeout(() => {
-      this.download(vodId, app, retry, delay);
+      this.download(vodId, app, retry, delay, liveDownload);
     }, 1000 * 60 * delay);
     return console.error("failed to get m3u8");
   }
@@ -953,7 +966,7 @@ module.exports.download = async (vodId, app, retry = 0, delay = 1) => {
   let parsedM3u8 = twitch.getParsedM3u8(newVideoM3u8);
   if (!parsedM3u8) {
     setTimeout(() => {
-      this.download(vodId, app, retry, delay);
+      this.download(vodId, app, retry, delay, liveDownload);
     }, 1000 * 60 * delay);
     console.error(newVideoM3u8);
     return console.error("failed to parse m3u8");
@@ -964,25 +977,35 @@ module.exports.download = async (vodId, app, retry = 0, delay = 1) => {
   let variantM3u8 = await twitch.getVariantM3u8(parsedM3u8);
   if (!variantM3u8) {
     setTimeout(() => {
-      this.download(vodId, app, retry, delay);
+      this.download(vodId, app, retry, delay, liveDownload);
     }, 1000 * 60 * delay);
     return console.error("failed to get variant m3u8");
   }
 
-  variantM3u8 = HLS.parse(variantM3u8);
-  variantM3u8 = checkForUnmutedTS(variantM3u8);
+  //Save duration
+  duration = await hlsGetDuration(variantM3u8);
+  if (m3u8Exists && newVodData) await this.saveChapters(vodId, app, duration);
 
+  await saveDuration(vodId, duration, app);
+
+  variantM3u8 = HLS.parse(variantM3u8);
+  if (liveDownload) variantM3u8 = checkForUnmutedTS(variantM3u8);
+
+  //initalize
   if (!(await fileExists(m3u8Path))) {
     if (!(await fileExists(dir))) {
-      fs.mkdirSync(dir);
-    }
-    await downloadTSFiles(variantM3u8, dir, baseURL, vodId);
+    fs.mkdirSync(dir);
+  }
+    await writeM3u8ToFile(variantM3u8, dir, vodId);
+    await downloadTSFiles(variantM3u8, dir, baseURL);
 
     setTimeout(() => {
-      this.download(vodId, app, retry, delay);
+      this.download(vodId, app, retry, delay, liveDownload);
     }, 1000 * 60 * delay);
     return;
   }
+  
+  await writeM3u8ToFile(variantM3u8, dir, vodId);
 
   let videoM3u8 = await fs.promises.readFile(m3u8Path, "utf8").catch((e) => {
     console.error(e);
@@ -991,7 +1014,7 @@ module.exports.download = async (vodId, app, retry = 0, delay = 1) => {
 
   if (!videoM3u8) {
     setTimeout(() => {
-      this.download(vodId, app, retry, delay);
+      this.download(vodId, app, retry, delay, liveDownload);
     }, 1000 * 60 * delay);
     return;
   }
@@ -1008,24 +1031,32 @@ module.exports.download = async (vodId, app, retry = 0, delay = 1) => {
   ) {
     retry++;
     setTimeout(() => {
-      this.download(vodId, app, retry, delay);
+      this.download(vodId, app, retry, delay, liveDownload);
     }, 1000 * 60 * delay);
     return;
   }
 
   //reset retry if downloading new ts files.
   retry = 1;
-  await downloadTSFiles(variantM3u8, dir, baseURL, vodId);
+  await downloadTSFiles(variantM3u8, dir, baseURL);
 
   setTimeout(() => {
-    this.download(vodId, app, retry, delay);
+    this.download(vodId, app, retry, delay, liveDownload);
   }, 1000 * 60 * delay);
 };
 
 const checkForUnmutedTS = (m3u8) => {
-  for (let segment of m3u8.segments) {
-    if (segment.uri.includes("unmuted")) {
-      m3u8.segments[segment] = `${segment.uri.substring(
+  for (let i = 0; i < m3u8.segments.length; i++) {
+    const segment = m3u8.segments[i];
+    if (segment.uri.includes("-muted")) {
+      m3u8.segments[i].uri = `${segment.uri.substring(
+        0,
+        segment.uri.indexOf("-muted")
+      )}.ts`;
+      continue;
+    }
+    if (segment.uri.includes("-unmuted")) {
+      m3u8.segments[i].uri = `${segment.uri.substring(
         0,
         segment.uri.indexOf("-unmuted")
       )}.ts`;
@@ -1034,12 +1065,15 @@ const checkForUnmutedTS = (m3u8) => {
   return m3u8;
 };
 
-const downloadTSFiles = async (m3u8, dir, baseURL, vodId) => {
-  try {
-    fs.writeFileSync(`${dir}/${vodId}.m3u8`, HLS.stringify(m3u8));
-  } catch (err) {
-    console.error(err);
-  }
+const writeM3u8ToFile = async (m3u8, dir, vodId) => {
+  await fs.promises
+    .writeFile(`${dir}/${vodId}.m3u8`, HLS.stringify(m3u8))
+    .catch((e) => {
+      console.error(e);
+    });
+};
+
+const downloadTSFiles = async (m3u8, dir, baseURL) => {
   for (let segment of m3u8.segments) {
     if (await fileExists(`${dir}/${segment.uri}`)) continue;
 
@@ -1073,7 +1107,7 @@ module.exports.convertToMp4 = async (m3u8, vodId, mp4Path) => {
     ffmpeg_process
       .videoCodec("copy")
       .audioCodec("copy")
-      .outputOptions(["-bsf:a aac_adtstoasc", "-copyts", "-start_at_zero"])
+      .outputOptions(["-bsf:a aac_adtstoasc"])
       .toFormat("mp4")
       .on("progress", (progress) => {
         if ((process.env.NODE_ENV || "").trim() !== "production") {
@@ -1108,6 +1142,18 @@ const fileExists = async (file) => {
     .catch(() => false);
 };
 
+//EXT-X-TWITCH-TOTAL-SECS use this to get total duration from m3u8
+const hlsGetDuration = async (m3u8) => {
+  let totalSeconds;
+  for (let line of m3u8.split("\n")) {
+    if (!line.startsWith("#EXT-X-TWITCH-TOTAL-SECS:")) continue;
+    const split = line.split(":");
+    if (split[1]) totalSeconds = parseInt(split[1]);
+    break;
+  }
+  return totalSeconds;
+};
+
 const getDuration = async (video) => {
   let duration;
   await new Promise((resolve, reject) => {
@@ -1120,10 +1166,11 @@ const getDuration = async (video) => {
       resolve();
     });
   });
-  return duration;
+  return Math.round(duration);
 };
 
 const saveDuration = async (vodId, duration, app) => {
+  if (isNaN(duration)) return;
   duration = toHHMMSS(duration);
 
   await app
