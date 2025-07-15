@@ -22,9 +22,6 @@ module.exports.verify = function (app) {
     const authKey = req.headers.authorization.split(" ")[1];
     const key = app.get("ADMIN_API_KEY");
 
-    console.log(req.headers)
-    console.log(authKey)
-
     if (key !== authKey) {
       res.status(403).json({ error: true, msg: "Not authorized" });
       return;
