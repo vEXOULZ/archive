@@ -591,11 +591,12 @@ module.exports.splitVideoVodChapters = async (
           .toFormat("mp4")
           .on("progress", (progress) => {
             if ((process.env.NODE_ENV || "").trim() !== "production") {
-              readline.clearLine(process.stdout, 0);
-              readline.cursorTo(process.stdout, 0, null);
-              process.stdout.write(
-                `SPLIT VIDEO PROGRESS: ${Math.round(progress.percent)}%`
-              );
+              console.info(`SPLIT VIDEO PROGRESS: ${Math.round(progress.percent)}%`);
+              // readline.clearLine(process.stdout, 0);
+              // readline.cursorTo(process.stdout, 0, null);
+              // process.stdout.write(
+              //   `SPLIT VIDEO PROGRESS: ${Math.round(progress.percent)}%`
+              // );
             }
           })
           .on("start", (cmd) => {
@@ -1500,11 +1501,12 @@ module.exports.ffmpegMp4Download = async (m3u8, path) => {
       .toFormat("mp4")
       .on("progress", (progress) => {
         if ((process.env.NODE_ENV || "").trim() !== "production") {
-          readline.clearLine(process.stdout, 0);
-          readline.cursorTo(process.stdout, 0, null);
-          process.stdout.write(
-            `DOWNLOAD PROGRESS: ${Math.round(progress.percent)}%`
-          );
+          console.info(`DOWNLOAD PROGRESS: ${Math.round(progress.percent)}%`);
+          // readline.clearLine(process.stdout, 0);
+          // readline.cursorTo(process.stdout, 0, null);
+          // process.stdout.write(
+          //   `DOWNLOAD PROGRESS: ${Math.round(progress.percent)}%`
+          // );
         }
       })
       .on("start", (cmd) => {
