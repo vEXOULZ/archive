@@ -26,6 +26,7 @@ module.exports.upload = async (
   startPart = null,
   endPart = null
 ) => {
+
   let vod;
   await app
     .service("vods")
@@ -39,6 +40,9 @@ module.exports.upload = async (
     console.error("Failed to download video: no VOD in database");
     return;
   }
+
+  console.info(`starting from part ${startPart}`)
+  console.info(`ending at part ${endPart}`)
 
   let vodPath;
 
@@ -95,6 +99,8 @@ module.exports.upload = async (
 
         const startI = !startPart ? 0 : startPart
         const endI = !endPart ? paths.length : endPart
+
+        console.info(`uploading parts ${startI} to ${endI}`)
 
         for (let i = startI; i < endI; i++) {
           let totalGames, gameTitle, ytTitle;
