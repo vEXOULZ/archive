@@ -22,7 +22,9 @@ module.exports.upload = async (
   vodId,
   app,
   manualPath = false,
-  type = "vod"
+  type = "vod",
+  startPart = null,
+  endPart = null
 ) => {
   let vod;
   await app
@@ -91,7 +93,10 @@ module.exports.upload = async (
           return;
         }
 
-        for (let i = 0; i < paths.length; i++) {
+        const startI = !startPart ? 0 : startPart
+        const endI = !endPart ? paths.length : endPart
+
+        for (let i = startI; i < endI; i++) {
           let totalGames, gameTitle, ytTitle;
 
           await app

@@ -180,7 +180,7 @@ module.exports.refreshToken = function (app) {
 
 module.exports.download = function (app) {
   return async function (req, res, next) {
-    let { vodId, type, platform, path, m3u8 } = req.body;
+    let { vodId, type, platform, path, m3u8, startPart, endPart } = req.body;
     if (!vodId) return res.status(400).json({ error: true, msg: "No VodId" });
     if (!type) return res.status(400).json({ error: true, msg: "No type" });
     if (!platform)
@@ -199,7 +199,7 @@ module.exports.download = function (app) {
         await kick.downloadHLS(vodId, app, m3u8);
         return;
       }
-      const vodPath = await vod.upload(vodId, app, path, type);
+      const vodPath = await vod.upload(vodId, app, path, type, startPart, endPart);
       // if (vodPath) fs.unlinkSync(vodPath);
       return;
     } else {
