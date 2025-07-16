@@ -97,12 +97,7 @@ module.exports.upload = async (
           return;
         }
 
-        const startI = !startPart ? 0 : startPart
-        const endI = !endPart ? paths.length : endPart
-
-        console.info(`uploading parts ${startI} to ${endI}`)
-
-        for (let i = startI; i < endI; i++) {
+        for (let i = 0; i < parts.length; i++) {
           let totalGames, gameTitle, ytTitle;
 
           await app
@@ -228,7 +223,7 @@ module.exports.upload = async (
 
     let paths;
     if (vod.chapters) {
-      paths = await this.splitVideoVodChapters(vodPath, duration, vodId, vod.chapters);
+      paths = await this.splitVideoVodChapters(vodPath, duration, vodId, vod.chapters, startPart, endPart);
     } else {
       paths = await this.splitVideo(vodPath, duration, vodId);
     }
@@ -239,7 +234,12 @@ module.exports.upload = async (
       return;
     }
 
-    for (let i = 0; i < paths.length; i++) {
+    const startI = !startPart ? 0 : startPart
+    const endI = !endPart ? paths.length : endPart
+
+    console.info(`uploading parts ${startI} to ${endI}`)
+
+    for (let i = startI; i < endI; i++) {
       const data = {
         path: paths[i],
         title:
@@ -526,8 +526,14 @@ module.exports.splitVideo = async (vodPath, duration, vodId) => {
 };
 
 
-module.exports.splitVideoVodChapters = async (vodPath, duration, vodId, vodChapters) => {
-  console.info(`Trying to split ${vodPath} with duration ${duration} skipping restricted games`);
+module.exports.splitVideoVodChapters = async (
+  vodPath,
+  duration,
+  vodId,
+  vodChapters,
+  startPart = null,
+  endPart = null) => {
+  console.info(`Trying to split ${vodId} with duration ${duration} skipping restricted games`);
   const paths = [];
 
   let current_chapter = 0;
@@ -537,8 +543,8 @@ module.exports.splitVideoVodChapters = async (vodPath, duration, vodId, vodChapt
 
   while (start < duration) {
     await new Promise((resolve, reject) => {
-      console.info(`${vodPath} | ==========================`);
-      console.info(`${vodPath} | part from ${start}`);
+      console.info(`${vodId} | ==========================`);
+      console.info(`${vodId} | part from ${start}`);
 
       while (config.youtube.restrictedGames.includes(vodChapters[current_chapter].name)) {
         start = vodChapters[current_chapter].start + vodChapters[current_chapter].end
@@ -569,33 +575,41 @@ module.exports.splitVideoVodChapters = async (vodPath, duration, vodId, vodChapt
 
       let cut = end - start;
 
-      const ffmpeg_process = ffmpeg(vodPath);
-      ffmpeg_process
-        .seekOutput(start)
-        .duration(cut)
-        .videoCodec("copy")
-        .audioCodec("copy")
-        .toFormat("mp4")
-        .on("progress", (progress) => {
-          if ((process.env.NODE_ENV || "").trim() !== "production") {
-            readline.clearLine(process.stdout, 0);
-            readline.cursorTo(process.stdout, 0, null);
-            process.stdout.write(
-              `SPLIT VIDEO PROGRESS: ${Math.round(progress.percent)}%`
-            );
-          }
-        })
-        .on("start", (cmd) => {
-          console.info(`Splitting ${vodPath}. [${start} to ${end}] / ${duration}`);
-        })
-        .on("error", function (err) {
-          ffmpeg_process.kill("SIGKILL");
-          reject(err);
-        })
-        .on("end", function () {
-          resolve(`${path.dirname(vodPath)}/${start}-${vodId}.mp4`);
-        })
-        .saveToFile(`${path.dirname(vodPath)}/${start}-${vodId}.mp4`);
+      if (
+        (startPart !== null && paths.lenght < startPart) ||
+        (endPart !== null && paths.lenght > endPart)
+      ) {
+          console.info(`Skipping ${vodPath}. [${start} to ${end}] / ${duration}`);
+          resolve("");
+      } else {
+        const ffmpeg_process = ffmpeg(vodPath);
+        ffmpeg_process
+          .seekOutput(start)
+          .duration(cut)
+          .videoCodec("copy")
+          .audioCodec("copy")
+          .toFormat("mp4")
+          .on("progress", (progress) => {
+            if ((process.env.NODE_ENV || "").trim() !== "production") {
+              readline.clearLine(process.stdout, 0);
+              readline.cursorTo(process.stdout, 0, null);
+              process.stdout.write(
+                `SPLIT VIDEO PROGRESS: ${Math.round(progress.percent)}%`
+              );
+            }
+          })
+          .on("start", (cmd) => {
+            console.info(`Splitting ${vodPath}. [${start} to ${end}] / ${duration}`);
+          })
+          .on("error", function (err) {
+            ffmpeg_process.kill("SIGKILL");
+            reject(err);
+          })
+          .on("end", function () {
+            resolve(`${path.dirname(vodPath)}/${start}-${vodId}.mp4`);
+          })
+          .saveToFile(`${path.dirname(vodPath)}/${start}-${vodId}.mp4`);
+        }
     })
       .then((argPath) => {
         paths.push(argPath);
@@ -605,9 +619,9 @@ module.exports.splitVideoVodChapters = async (vodPath, duration, vodId, vodChapt
         console.error("\nffmpeg error occurred: " + e);
       });
     start = end;
-    console.info(`Trying to split ${vodPath} =~= new part =~= start at ${start}`);
+    console.info(`Trying to split ${vodId} =~= new part =~= start at ${start}`);
   }
-  console.info(`Trying to split ${vodPath} =================== END`);
+  console.info(`Trying to split ${vodId} =================== END`);
   return paths;
 };
 
