@@ -234,8 +234,8 @@ module.exports.upload = async (
       return;
     }
 
-    const startI = !startPart ? 0 : startPart
-    const endI = !endPart ? paths.length : endPart
+    const startI = !startPart ? 0 : startPart-1
+    const endI = !endPart ? paths.length : endPart-1
 
     console.info(`uploading parts ${startI} to ${endI}`)
 
@@ -576,8 +576,8 @@ module.exports.splitVideoVodChapters = async (
       let cut = end - start;
 
       if (
-        (startPart !== null && paths.lenght < startPart) ||
-        (endPart !== null && paths.lenght > endPart)
+        (startPart !== null && paths.lenght < startPart-1) ||
+        (endPart !== null && paths.lenght > endPart-1)
       ) {
           console.info(`Skipping ${vodPath}. [${start} to ${end}] / ${duration}`);
           resolve("");
