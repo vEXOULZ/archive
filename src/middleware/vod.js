@@ -583,6 +583,7 @@ module.exports.splitVideoVodChapters = async (
           resolve("");
       } else {
         const ffmpeg_process = ffmpeg(vodPath);
+        let last_prog_update = Date.now()
         ffmpeg_process
           .seekOutput(start)
           .duration(cut)
@@ -591,7 +592,10 @@ module.exports.splitVideoVodChapters = async (
           .toFormat("mp4")
           .on("progress", (progress) => {
             if ((process.env.NODE_ENV || "").trim() !== "production") {
-              console.info(`SPLIT VIDEO PROGRESS: ${Math.round(progress.percent)}%`);
+              if (Date.now() - last_prog_update > 10000) {
+                last_prog_update = Date.now();
+                console.info(`SPLIT VIDEO PROGRESS: ${Math.round(progress.percent)}%`);
+              }
               // readline.clearLine(process.stdout, 0);
               // readline.cursorTo(process.stdout, 0, null);
               // process.stdout.write(
@@ -630,19 +634,24 @@ module.exports.trim = async (vodPath, vodId, start, end) => {
   let returnPath;
   await new Promise((resolve, reject) => {
     const ffmpeg_process = ffmpeg(vodPath);
+    let last_prog_update = Date.now()
     ffmpeg_process
       .videoCodec("copy")
       .audioCodec("copy")
       .outputOptions([`-ss ${start}`, "-copyts", `-t ${end}`])
       .toFormat("mp4")
       .on("progress", (progress) => {
-        if ((process.env.NODE_ENV || "").trim() !== "production") {
-          readline.clearLine(process.stdout, 0);
-          readline.cursorTo(process.stdout, 0, null);
-          process.stdout.write(
-            `TRIM VIDEO PROGRESS: ${Math.round(progress.percent)}%`
-          );
+        if (Date.now() - last_prog_update > 10000) {
+          last_prog_update = Date.now();
+          console.info(`TRIM VIDEO PROGRESS: ${Math.round(progress.percent)}%`);
         }
+        // if ((process.env.NODE_ENV || "").trim() !== "production") {
+        //   readline.clearLine(process.stdout, 0);
+        //   readline.cursorTo(process.stdout, 0, null);
+        //   process.stdout.write(
+        //     `TRIM VIDEO PROGRESS: ${Math.round(progress.percent)}%`
+        //   );
+        // }
       })
       .on("start", (cmd) => {
         if ((process.env.NODE_ENV || "").trim() !== "production") {
@@ -672,6 +681,7 @@ module.exports.trimHLS = async (vodPath, vodId, start, end) => {
   let returnPath;
   await new Promise((resolve, reject) => {
     const ffmpeg_process = ffmpeg(vodPath);
+    let last_prog_update = Date.now()
     ffmpeg_process
       .seekOutput(start)
       .videoCodec("copy")
@@ -685,11 +695,15 @@ module.exports.trimHLS = async (vodPath, vodId, start, end) => {
       .toFormat("mp4")
       .on("progress", (progress) => {
         if ((process.env.NODE_ENV || "").trim() !== "production") {
-          readline.clearLine(process.stdout, 0);
-          readline.cursorTo(process.stdout, 0, null);
-          process.stdout.write(
-            `TRIM HLS VIDEO PROGRESS: ${Math.round(progress.percent)}%`
-          );
+          if (Date.now() - last_prog_update > 10000) {
+            last_prog_update = Date.now();
+            console.info(`TRIM HLS VIDEO PROGRESS: ${Math.round(progress.percent)}%`);
+          }
+          // readline.clearLine(process.stdout, 0);
+          // readline.cursorTo(process.stdout, 0, null);
+          // process.stdout.write(
+          //   `TRIM HLS VIDEO PROGRESS: ${Math.round(progress.percent)}%`
+          // );
         }
       })
       .on("start", (cmd) => {
@@ -1130,6 +1144,7 @@ const downloadTSFiles = async (m3u8, dir, baseURL) => {
 module.exports.convertToMp4 = async (m3u8, vodId, mp4Path) => {
   await new Promise((resolve, reject) => {
     const ffmpeg_process = ffmpeg(m3u8);
+    let last_prog_update = Date.now()
     ffmpeg_process
       .videoCodec("copy")
       .audioCodec("copy")
@@ -1137,11 +1152,15 @@ module.exports.convertToMp4 = async (m3u8, vodId, mp4Path) => {
       .toFormat("mp4")
       .on("progress", (progress) => {
         if ((process.env.NODE_ENV || "").trim() !== "production") {
-          readline.clearLine(process.stdout, 0);
-          readline.cursorTo(process.stdout, 0, null);
-          process.stdout.write(
-            `M3U8 CONVERT TO MP4 PROGRESS: ${Math.round(progress.percent)}%`
-          );
+          if (Date.now() - last_prog_update > 10000) {
+            last_prog_update = Date.now();
+            console.info(`M3U8 CONVERT TO MP4 PROGRESS: ${Math.round(progress.percent)}%`);
+          }
+          // readline.clearLine(process.stdout, 0);
+          // readline.cursorTo(process.stdout, 0, null);
+          // process.stdout.write(
+          //   `M3U8 CONVERT TO MP4 PROGRESS: ${Math.round(progress.percent)}%`
+          // );
         }
       })
       .on("start", (cmd) => {
@@ -1494,6 +1513,7 @@ module.exports.mp4Download = async (vodId) => {
 module.exports.ffmpegMp4Download = async (m3u8, path) => {
   return new Promise((resolve, reject) => {
     const ffmpeg_process = ffmpeg(m3u8);
+    let last_prog_update = Date.now()
     ffmpeg_process
       .videoCodec("copy")
       .audioCodec("copy")
@@ -1501,7 +1521,10 @@ module.exports.ffmpegMp4Download = async (m3u8, path) => {
       .toFormat("mp4")
       .on("progress", (progress) => {
         if ((process.env.NODE_ENV || "").trim() !== "production") {
-          console.info(`DOWNLOAD PROGRESS: ${Math.round(progress.percent)}%`);
+          if (Date.now() - last_prog_update > 10000) {
+            last_prog_update = Date.now();
+            console.info(`DOWNLOAD PROGRESS: ${Math.round(progress.percent)}%`);
+          }
           // readline.clearLine(process.stdout, 0);
           // readline.cursorTo(process.stdout, 0, null);
           // process.stdout.write(
