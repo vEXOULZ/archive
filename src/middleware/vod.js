@@ -579,13 +579,14 @@ module.exports.splitVideoVodChapters = async (
       console.log(`${startPart}`)
       console.log(`${endPart}`)
 
-      console.log(`${startPart !== null}`)
-      console.log(`${endPart !== null}`)
 
       console.log(`${paths.lenght} < ${startPart}-1`)
+      console.log(`${startPart !== null}`)
       console.log(`${(startPart !== null && paths.lenght < startPart-1)}`)
       console.log(`${paths.lenght} > ${endPart}-1`)
+      console.log(`${endPart !== null}`)
       console.log(`${(endPart !== null && paths.lenght > endPart-1)}`)
+      console.log(`do we skip?`)
       console.log(`${(startPart !== null && paths.lenght < startPart-1) ||
         (endPart !== null && paths.lenght > endPart-1)}`)
 
