@@ -403,13 +403,16 @@ module.exports.badges = function (app) {
   const _this = this;
   return async function (req, res, next) {
     const redisClient = app.get("redisClient");
-    const key = `${config.channel}-badges`;
-    const cachedBadges = await redisClient
-      .get(key)
-      .then((data) => JSON.parse(data))
-      .catch(() => null);
 
-    if (cachedBadges) return res.json(cachedBadges);
+    if (client) {
+      const key = `${config.channel}-badges`;
+      const cachedBadges = await redisClient
+        .get(key)
+        .then((data) => JSON.parse(data))
+        .catch(() => null);
+
+      if (cachedBadges) return res.json(cachedBadges);
+    }
 
     let badges = {
       channel: await _this.getChannelBadges(),
@@ -424,8 +427,10 @@ module.exports.badges = function (app) {
 
     res.json(badges);
 
-    redisClient.set(key, JSON.stringify(badges), {
-      EX: 3600,
-    });
+    if (client) {
+      redisClient.set(key, JSON.stringify(badges), {
+        EX: 3600,
+      });
+    }
   };
 };

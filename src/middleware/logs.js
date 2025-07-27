@@ -229,11 +229,13 @@ const returnCommentId = async (app, vodId, content_offset_seconds, vodData) => {
 const returnStartingId = async (app, vodId, vodData) => {
   const key = `${config.channel}-${vodId}-chat-startingId`;
   const client = app.get("redisClient");
-  let startingId = await client
-    .get(key)
-    .then((data) => data)
-    .catch(() => null);
-
+  let startingId = null
+  if (client) {
+    startingId = await client
+      .get(key)
+      .then((data) => data)
+      .catch(() => null);
+  }
   if (!startingId) {
     let data = await app
       .service("logs")
@@ -259,9 +261,11 @@ const returnStartingId = async (app, vodId, vodData) => {
 
     startingId = data[0]._id;
 
-    client.set(key, startingId, {
-      EX: 60 * 60 * 24 * 1,
-    });
+    if (client) {
+      client.set(key, startingId, {
+        EX: 60 * 60 * 24 * 1,
+      });
+    }
   }
 
   return startingId;
