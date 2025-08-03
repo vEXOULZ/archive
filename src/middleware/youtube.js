@@ -240,9 +240,9 @@ module.exports.upload = async (data, app, isVod = true) => {
           if ((process.env.NODE_ENV || "").trim() !== "production") {
             if (Date.now() - last_prog_update > 10000) {
               last_prog_update = Date.now();
+              const progress = (evt.bytesRead / fileSize) * 100;
               console.info(`SPLIT VIDEO PROGRESS: ${Math.round(progress.percent)}%`);
             }
-            // const progress = (evt.bytesRead / fileSize) * 100;
             // readline.clearLine(process.stdout, 0);
             // readline.cursorTo(process.stdout, 0, null);
             // process.stdout.write(`UPLOAD PROGRESS: ${Math.round(progress)}%`);
