@@ -215,6 +215,7 @@ module.exports.upload = async (data, app, isVod = true) => {
         isVod ? "youtube" : "games"
       }/${data.vod.id}\nStream Title: ${vodTitle}\n` +
       config.youtube.description;
+    let last_prog_update = Date.now()
     const res = await youtube.videos.insert(
       {
         auth: oauth2Client,
@@ -237,10 +238,14 @@ module.exports.upload = async (data, app, isVod = true) => {
       {
         onUploadProgress: (evt) => {
           if ((process.env.NODE_ENV || "").trim() !== "production") {
-            const progress = (evt.bytesRead / fileSize) * 100;
-            readline.clearLine(process.stdout, 0);
-            readline.cursorTo(process.stdout, 0, null);
-            process.stdout.write(`UPLOAD PROGRESS: ${Math.round(progress)}%`);
+            if (Date.now() - last_prog_update > 10000) {
+              last_prog_update = Date.now();
+              console.info(`SPLIT VIDEO PROGRESS: ${Math.round(progress.percent)}%`);
+            }
+            // const progress = (evt.bytesRead / fileSize) * 100;
+            // readline.clearLine(process.stdout, 0);
+            // readline.cursorTo(process.stdout, 0, null);
+            // process.stdout.write(`UPLOAD PROGRESS: ${Math.round(progress)}%`);
           }
         },
       }
