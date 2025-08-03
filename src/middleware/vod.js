@@ -575,21 +575,6 @@ module.exports.splitVideoVodChapters = async (
 
       let cut = end - start;
 
-      console.log(`${paths.length}`)
-      console.log(`${startPart}`)
-      console.log(`${endPart}`)
-
-
-      console.log(`${paths.length} < ${startPart}-1`)
-      console.log(`${startPart !== null}`)
-      console.log(`${(startPart !== null && paths.length < startPart-1)}`)
-      console.log(`${paths.length} > ${endPart}-1`)
-      console.log(`${endPart !== null}`)
-      console.log(`${(endPart !== null && paths.length > endPart-1)}`)
-      console.log(`do we skip?`)
-      console.log(`${(startPart !== null && paths.length < startPart-1) ||
-        (endPart !== null && paths.length > endPart-1)}`)
-
       if (
         (startPart !== null && paths.length < startPart-1) ||
         (endPart !== null && paths.length > endPart-1)
